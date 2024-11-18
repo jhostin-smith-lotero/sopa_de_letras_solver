@@ -1,0 +1,75 @@
+"""
+Sopa de Letras Solver
+
+Este script busca palabras en una sopa de letras y genera un reporte en formato JSON.
+
+Funciones principales:
+- find_word: Busca una palabra en la sopa de letras.
+- find_words: Busca múltiples palabras y devuelve un diccionario con los resultados.
+- generate_report: Guarda un reporte de las palabras encontradas en un archivo JSON.
+- read_input_file: Lee la sopa de letras y palabras desde un archivo ".txt".
+
+Cómo usar:
+1. Llama a las funciones read_input_file y generate_report.
+
+Autor: Jhostin Loterto
+"""
+
+import json
+
+
+def find_word(letter_soup, word):
+    rows, cols = len(letter_soup), len(letter_soup[0])
+    directions = [
+        (0, 1),
+        (1, 0),
+        (1, 1),
+        (-1, 0),
+        (0, -1),
+        (-1, -1),
+        (-1, 1),
+        (1, -1)
+    ]
+
+    def valid_position(x, y):
+        return 0 <= x < rows and 0 <= y < cols
+
+    def search_direction(x, y, dx, dy):
+        for i in range(len(word)):
+            nx, ny = x + i * dx, y + i * dy
+            if not valid_position(nx, ny) or letter_soup[nx][ny] != word[i]:
+                return False
+        return True
+
+    for i in range(rows):
+        for j in range(cols):
+            if letter_soup[i][j] == word[0]:
+                for dx, dy in directions:
+                    if search_direction(i, j, dx, dy):
+                        return True
+    return False
+
+
+def find_words(letter_soup, words):
+    return {word: find_word(letter_soup, word) for word in words}
+
+
+def generate_report(letter_soup, words, output_path="report.json"):
+    report = find_words(letter_soup, words)
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=4, ensure_ascii=False)
+    print(f"Reporte generado en: {output_path}")
+    return output_path
+
+
+def read_input_file(file_path):
+    with open(file_path, "r", encoding="utf-8") as f:
+        lines = f.read().splitlines()
+    separator_index = lines.index("---")
+    letter_soup = [list(line) for line in lines[:separator_index]]
+    words = lines[separator_index + 1:]
+    return letter_soup, words
+
+
+letter_soup, words = read_input_file("input.txt")
+generate_report(letter_soup, words)
